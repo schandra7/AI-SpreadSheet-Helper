@@ -57,98 +57,54 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <h1 className="text-2xl font-bold mb-4">Upload CSV or Excel File</h1>
-      <input type="file" accept=".csv, .xlsx, .xls" onChange={handleFileUpload} className="mb-6" />
+  <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center px-4">
+    <h1 className="text-3xl font-bold mb-6">Upload CSV or Excel File</h1>
 
-      {tableData && columns.length > 0 && (
-        <>
-          {/* Data Table */}
-          <div className="overflow-x-auto mt-4">
-            <table className="min-w-full border border-white border-collapse">
-              <thead>
-                <tr>
+    {/* Upload Button Styled */}
+    <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl text-white font-semibold transition duration-200">
+      Choose File
+      <input
+        type="file"
+        accept=".csv, .xlsx, .xls"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+    </label>
+
+    {/* Show filename if uploaded */}
+    {tableData && (
+      <p className="mt-2 text-green-400 text-sm italic">File uploaded successfully</p>
+    )}
+
+    {tableData && columns.length > 0 && (
+      <>
+        {/* Data Table */}
+        <div className="overflow-x-auto mt-10">
+          <table className="min-w-full border border-white border-collapse">
+            <thead>
+              <tr>
+                {columns.map((col) => (
+                  <th key={col} className="border border-white px-3 py-1 text-left">{col}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {tableData.map((row, idx) => (
+                <tr key={idx}>
                   {columns.map((col) => (
-                    <th key={col} className="border border-white px-3 py-1 text-left">
-                      {col}
-                    </th>
+                    <td key={col} className="border border-white px-3 py-1">{row[col]}</td>
                   ))}
                 </tr>
-              </thead>
-              <tbody>
-                {tableData.map((row, idx) => (
-                  <tr key={idx}>
-                    {columns.map((col) => (
-                      <td key={col} className="border border-white px-3 py-1">
-                        {row[col]}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-          {/* Rule Input UI */}
-          <div className="mt-10 w-full max-w-2xl bg-zinc-900 p-4 rounded-xl text-white">
-            <h2 className="text-lg font-bold mb-4">Define Business Rules</h2>
+        {/* Rule Input UI (same as before) */}
+        {/* ...Your Rule UI code... */}
+      </>
+    )}
+  </div>
+);
 
-            <div className="flex flex-col sm:flex-row gap-2 mb-4">
-              <select
-                value={selectedColumn}
-                onChange={(e) => setSelectedColumn(e.target.value)}
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded"
-              >
-                <option value="">Select Column</option>
-                {columns.map((col) => (
-                  <option key={col} value={col}>
-                    {col}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={selectedOperator}
-                onChange={(e) => setSelectedOperator(e.target.value)}
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded"
-              >
-                <option value="">Select Operator</option>
-                <option value="==">=</option>
-                <option value="!=">≠</option>
-                <option value=">">&gt;</option>
-                <option value="<">&lt;</option>
-                <option value=">=">&ge;</option>
-                <option value="<=">&le;</option>
-              </select>
-
-              <input
-                type="text"
-                placeholder="Value"
-                value={ruleValue}
-                onChange={(e) => setRuleValue(e.target.value)}
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded text-white"
-              />
-
-              <button
-                onClick={addRule}
-                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white"
-              >
-                Add Rule
-              </button>
-            </div>
-
-            {rules.length > 0 && (
-              <ul className="list-disc pl-6">
-                {rules.map((rule, index) => (
-                  <li key={index}>
-                    {rule.column} {rule.operator} {rule.value}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
 }
