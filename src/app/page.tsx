@@ -1,103 +1,154 @@
-import Image from "next/image";
+'use client';
+import { useState } from 'react';
+import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 
-export default function Home() {
+export default function UploadPage() {
+  const [tableData, setTableData] = useState<Record<string, any>[] | null>(null);
+  const [columns, setColumns] = useState<string[]>([]);
+  const [selectedColumn, setSelectedColumn] = useState("");
+  const [selectedOperator, setSelectedOperator] = useState("");
+  const [ruleValue, setRuleValue] = useState("");
+  const [rules, setRules] = useState<
+    { column: string; operator: string; value: string }[]
+  >([]);
+
+  const addRule = () => {
+    if (!selectedColumn || !selectedOperator || !ruleValue) return;
+    const newRule = { column: selectedColumn, operator: selectedOperator, value: ruleValue };
+    setRules((prev) => [...prev, newRule]);
+    setSelectedColumn("");
+    setSelectedOperator("");
+    setRuleValue("");
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const data = event.target?.result;
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+
+      if (fileExtension === 'csv') {
+        const parsed = Papa.parse<Record<string, any>>(data as string, {
+          header: true,
+          skipEmptyLines: true,
+        });
+        setTableData(parsed.data);
+        const cols = parsed.data.length > 0 ? Object.keys(parsed.data[0]) : [];
+        setColumns(cols);
+      } else if (['xlsx', 'xls'].includes(fileExtension!)) {
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
+        setTableData(jsonData);
+        const cols = jsonData.length > 0 ? Object.keys(jsonData[0]) : [];
+        setColumns(cols);
+      } else {
+        alert('Unsupported file type!');
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-black text-white p-6">
+      <h1 className="text-2xl font-bold mb-4">Upload CSV or Excel File</h1>
+      <input type="file" accept=".csv, .xlsx, .xls" onChange={handleFileUpload} className="mb-6" />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      {tableData && columns.length > 0 && (
+        <>
+          {/* Data Table */}
+          <div className="overflow-x-auto mt-4">
+            <table className="min-w-full border border-white border-collapse">
+              <thead>
+                <tr>
+                  {columns.map((col) => (
+                    <th key={col} className="border border-white px-3 py-1 text-left">
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableData.map((row, idx) => (
+                  <tr key={idx}>
+                    {columns.map((col) => (
+                      <td key={col} className="border border-white px-3 py-1">
+                        {row[col]}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Rule Input UI */}
+          <div className="mt-10 w-full max-w-2xl bg-zinc-900 p-4 rounded-xl text-white">
+            <h2 className="text-lg font-bold mb-4">Define Business Rules</h2>
+
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
+              <select
+                value={selectedColumn}
+                onChange={(e) => setSelectedColumn(e.target.value)}
+                className="p-2 bg-zinc-800 border border-zinc-700 rounded"
+              >
+                <option value="">Select Column</option>
+                {columns.map((col) => (
+                  <option key={col} value={col}>
+                    {col}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedOperator}
+                onChange={(e) => setSelectedOperator(e.target.value)}
+                className="p-2 bg-zinc-800 border border-zinc-700 rounded"
+              >
+                <option value="">Select Operator</option>
+                <option value="==">=</option>
+                <option value="!=">≠</option>
+                <option value=">">&gt;</option>
+                <option value="<">&lt;</option>
+                <option value=">=">&ge;</option>
+                <option value="<=">&le;</option>
+              </select>
+
+              <input
+                type="text"
+                placeholder="Value"
+                value={ruleValue}
+                onChange={(e) => setRuleValue(e.target.value)}
+                className="p-2 bg-zinc-800 border border-zinc-700 rounded text-white"
+              />
+
+              <button
+                onClick={addRule}
+                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white"
+              >
+                Add Rule
+              </button>
+            </div>
+
+            {rules.length > 0 && (
+              <ul className="list-disc pl-6">
+                {rules.map((rule, index) => (
+                  <li key={index}>
+                    {rule.column} {rule.operator} {rule.value}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
